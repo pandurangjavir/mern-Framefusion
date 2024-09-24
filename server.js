@@ -10,7 +10,7 @@ app.use(express.json())
 
 if(process.env.NODE_ENV === 'local'){
     app.use(cors({
-        origin: process.env.NODE_ENV === 'http://localhost:5173';
+        origin: process.env.NODE_ENV === 'http://localhost:5173',
         credentials: true
     }));
     
