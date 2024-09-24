@@ -1,28 +1,30 @@
-const express = require('express')
-const mongoose = require('mongoose')
-const app = express()
-const dotenv=require('dotenv')
-const cors = require('cors')
-const path = require('path')
+const express = require('express');
+const mongoose = require('mongoose');
+const app = express();
+const dotenv = require('dotenv');
+const cors = require('cors');
+const path = require('path');
 
-dotenv.config()
-app.use(express.json())
+dotenv.config();
+app.use(express.json());
 
-if(process.env.NODE_ENV === 'local'){
+// CORS setup
+if (process.env.NODE_ENV === 'local') {
     app.use(cors({
-        origin: process.env.NODE_ENV === 'http://localhost:5173';
+        origin: 'http://localhost:5173', // Fixed typo
         credentials: true
     }));
-    
-}else{
+} else {
     app.use(cors({
+        origin: process.env.CLIENT_URL || '*', // Allow specific client or default to '*'
         credentials: true
-    }))
-
+    }));
 }
 
+// Routes
+app.use('/api', require('./routes/authRoutes'));
 
-app.use('/api',require('./routes/authRoutes'))
+// Static file serving for production
 if (process.env.NODE_ENV === 'production') {
     console.log('Serving static files from:', path.join(__dirname, "./vite-project/dist"));
     app.use(express.static(path.join(__dirname, "./vite-project/dist")));
@@ -31,22 +33,23 @@ if (process.env.NODE_ENV === 'production') {
         res.sendFile(path.resolve(__dirname, './', 'vite-project', 'dist', 'index.html'));
     });
 }
-  
 
+// Database connection
 const dbConnect = async () => {
     try {
-        if (process.env.NODE_ENV === 'local') {
-            await mongoose.connect(process.env.LOCAL_DB_URI);
-            console.log('Local database is connected ...');
-        } else {
-            await mongoose.connect(process.env.MONGODB_URI);
-            console.log('Production database is connected ...');
-        }
+        const dbUri = process.env.NODE_ENV === 'local' ? process.env.LOCAL_DB_URI : process.env.MONGODB_URI;
+        await mongoose.connect(dbUri, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        });
+        console.log(`${process.env.NODE_ENV} database is connected ...`);
     } catch (error) {
         console.error('Database connection failed:', error);
     }
 };
 
-dbConnect()
+dbConnect();
+
+// Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server is running on port ${PORT}..`));
