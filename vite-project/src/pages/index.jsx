@@ -26,6 +26,7 @@ const Index = () => {
     try {
       setLoader(true)
       const {data  } = await api.post('/api/user-register',state)
+      
       setLoader(false)
     } catch (error) {
       setLoader(false)
